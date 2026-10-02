@@ -98,12 +98,23 @@ Supabase Database
 * TypeScript
 * Zod
 * LangChain
-* OpenAI
+* OpenRouter (modelo `google/gemini-2.0-flash-001`)
+* Pollinations.ai (geração de imagens)
 * Supabase
 
 ## Banco de Dados
 
 * Supabase PostgreSQL
+
+A API espera uma tabela `projects` com as colunas:
+
+| Coluna             | Conteúdo                                         |
+| ------------------ | ------------------------------------------------ |
+| `id`               | Identificador do projeto (gerado pelo banco)     |
+| `objective`        | Objetivo escolhido pelo usuário                  |
+| `strategy_summary` | Respostas do formulário de estratégia            |
+| `data`             | JSON da Landing Page montada pelo Assembler      |
+| `created_at`       | Data de criação (usada para ordenar o portfólio) |
 
 ---
 
@@ -121,9 +132,14 @@ Supabase Database
 │   └── package.json
 │
 └── web
-    ├── app
-    ├── components
-    ├── public
+    ├── src
+    │   ├── app
+    │   │   ├── page.tsx              # Home
+    │   │   ├── create/page.tsx       # Assistente de criação (4 etapas)
+    │   │   ├── portfolio/page.tsx    # Lista de projetos salvos
+    │   │   └── preview/[id]/page.tsx # Renderização da Landing Page
+    │   └── lib
+    │       └── utils.ts
     └── package.json
 ```
 
@@ -251,6 +267,16 @@ GET /api/projects/:id
 
 ---
 
+## Proxy de Imagens
+
+```http
+GET /api/image-proxy?prompt=<prompt>&seed=<seed>
+```
+
+Gera a imagem via Pollinations.ai a partir do prompt (em inglês), com retry automático e backoff exponencial em caso de rate limit (HTTP 429). O parâmetro `seed` é opcional (padrão `123`).
+
+---
+
 # ⚙️ Variáveis de Ambiente
 
 Backend (`api/.env`)
@@ -261,7 +287,15 @@ PORT=3333
 SUPABASE_URL=
 SUPABASE_ANON_KEY=
 
-OPENAI_API_KEY=
+OPENROUTER_API_KEY=
+```
+
+A chave é obtida em [openrouter.ai](https://openrouter.ai). Os agentes usam o SDK da OpenAI (via LangChain) apontando para a API do OpenRouter.
+
+Frontend (`web/.env.local`)
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3333
 ```
 
 ---
